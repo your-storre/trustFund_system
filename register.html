@@ -1,1 +1,121 @@
-<!-- register.html placeholder -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register | TrustFund</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaGoIoHQdIFtz7B3c0SAHPoKDtJhgpUOE",
+      authDomain: "trustfundsystem.firebaseapp.com",
+      databaseURL: "https://trustfundsystem-default-rtdb.firebaseio.com",
+      projectId: "trustfundsystem",
+      storageBucket: "trustfundsystem.appspot.com",
+      messagingSenderId: "365465396892",
+      appId: "1:365465396892:web:6b40840cdf0b5d5062ef59",
+      measurementId: "G-VYLYV3SW7M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('registerForm');
+      const message = document.getElementById('message');
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        message.textContent = '';
+
+        const name = form.name.value;
+        const dob = form.dob.value;
+        const siblings = form.siblings.value;
+        const workStatus = form.workStatus.value;
+        const income = form.income.value;
+        const email = form.email.value;
+        const password = form.password.value;
+        const idFile = form.idFile.files[0];
+
+        if (!idFile) {
+          message.textContent = 'Please upload a valid ID document.';
+          message.className = 'error';
+          return;
+        }
+
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+
+          // Upload ID
+          const idRef = ref(storage, `ids/${user.uid}_${idFile.name}`);
+          await uploadBytes(idRef, idFile);
+          const idURL = await getDownloadURL(idRef);
+
+          // Save user info to Firestore
+          await setDoc(doc(db, 'users', user.uid), {
+            name,
+            dob,
+            siblings,
+            workStatus,
+            income,
+            email,
+            idURL
+          });
+
+          // Optional: Send email verification
+          await sendEmailVerification(user);
+
+          message.textContent = 'Successfully registered! Please verify your email and login.';
+          message.className = 'success';
+          setTimeout(() => window.location.href = 'login.html', 3000);
+        } catch (error) {
+          message.textContent = error.message;
+          message.className = 'error';
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h2>Register for TrustFund</h2>
+    <form id="registerForm">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" required />
+
+      <label for="dob">Date of Birth</label>
+      <input type="date" id="dob" required />
+
+      <label for="siblings">Number of Siblings</label>
+      <input type="number" id="siblings" required />
+
+      <label for="workStatus">Work Status</label>
+      <input type="text" id="workStatus" required />
+
+      <label for="income">Annual Income</label>
+      <input type="number" id="income" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" required />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" required />
+
+      <label for="idFile">Upload ID Document (pdf, jpg, png)</label>
+      <input type="file" id="idFile" accept=".pdf,.jpg,.jpeg,.png" required />
+
+      <button type="submit">Register</button>
+    </form>
+    <p id="message"></p>
+    <p><a href="login.html">Back to Login</a></p>
+  </div>
+</body>
+</html>
