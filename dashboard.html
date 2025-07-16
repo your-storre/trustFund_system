@@ -1,1 +1,71 @@
-<!-- dashboard.html placeholder -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard | TrustFund</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaGoIoHQdIFtz7B3c0SAHPoKDtJhgpUOE",
+      authDomain: "trustfundsystem.firebaseapp.com",
+      databaseURL: "https://trustfundsystem-default-rtdb.firebaseio.com",
+      projectId: "trustfundsystem",
+      storageBucket: "trustfundsystem.appspot.com",
+      messagingSenderId: "365465396892",
+      appId: "1:365465396892:web:6b40840cdf0b5d5062ef59",
+      measurementId: "G-VYLYV3SW7M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const welcome = document.getElementById('welcome');
+      const trustList = document.getElementById('trustList');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      onAuthStateChanged(auth, async user => {
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+        welcome.textContent = `Welcome, ${user.email}!`;
+
+        // Fetch trusts created by user
+        const q = query(collection(db, 'trusts'), where('creatorUid', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+          trustList.textContent = 'No trusts created yet.';
+          return;
+        }
+        trustList.innerHTML = '';
+        querySnapshot.forEach(doc => {
+          const trust = doc.data();
+          const li = document.createElement('li');
+          li.textContent = `${trust.name} - Balance: $${trust.balance.toFixed(2)} - Status: ${trust.isActive ? 'Active' : 'Terminated'}`;
+          trustList.appendChild(li);
+        });
+      });
+
+      logoutBtn.addEventListener('click', () => {
+        signOut(auth).then(() => window.location.href = 'login.html');
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h2>Dashboard</h2>
+    <p id="welcome">Loading...</p>
+    <ul id="trustList"></ul>
+    <button id="logoutBtn">Logout</button>
+    <p><a href="create-trust.html">Create Trust</a> | <a href="profile.html">Your Profile</a></p>
+  </div>
+</body>
+</html>
