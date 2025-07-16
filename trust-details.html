@@ -1,1 +1,89 @@
-<!-- trust-details.html placeholder -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Trust Details | TrustFund</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaGoIoHQdIFtz7B3c0SAHPoKDtJhgpUOE",
+      authDomain: "trustfundsystem.firebaseapp.com",
+      databaseURL: "https://trustfundsystem-default-rtdb.firebaseio.com",
+      projectId: "trustfundsystem",
+      storageBucket: "trustfundsystem.appspot.com",
+      messagingSenderId: "365465396892",
+      appId: "1:365465396892:web:6b40840cdf0b5d5062ef59",
+      measurementId: "G-VYLYV3SW7M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const trustId = getQueryParam('id');
+      const container = document.getElementById('trustDetails');
+      const message = document.getElementById('message');
+
+      if (!trustId) {
+        message.textContent = 'No Trust ID provided.';
+        message.className = 'error';
+        return;
+      }
+
+      onAuthStateChanged(auth, async user => {
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        try {
+          const docRef = doc(db, 'trusts', trustId);
+          const docSnap = await getDoc(docRef);
+
+          if (!docSnap.exists()) {
+            message.textContent = 'Trust not found.';
+            message.className = 'error';
+            return;
+          }
+
+          const trust = docSnap.data();
+          container.innerHTML = `
+            <h2>${trust.name}</h2>
+            <p><strong>Balance:</strong> $${trust.balance.toFixed(2)}</p>
+            <p><strong>Status:</strong> ${trust.isActive ? 'Active' : 'Terminated'}</p>
+            <h3>Beneficiaries</h3>
+            <ul>
+              ${(trust.beneficiaries || []).map(b => `<li>${b.name} - ${b.percentage}% - Total Received: $${b.totalReceived || 0}</li>`).join('')}
+            </ul>
+            <h3>Transaction History</h3>
+            <ul>
+              ${(trust.transactionHistory || []).map(tx => `<li>${new Date(tx.date.seconds * 1000).toLocaleString()} - ${tx.description}: $${tx.amount.toFixed(2)}</li>`).join('')}
+            </ul>
+          `;
+        } catch (error) {
+          message.textContent = error.message;
+          message.className = 'error';
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div id="trustDetails"></div>
+    <p id="message"></p>
+    <p><a href="dashboard.html">Back to Dashboard</a></p>
+  </div>
+</body>
+</html>
