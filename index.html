@@ -2,14 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Welcome | TrustFund System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welcome to TrustFund</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      background: linear-gradient(to right, #dfe9f3, #ffffff);
+      text-align: center;
+      padding-top: 100px;
+      font-family: sans-serif;
+    }
+    .welcome-box {
+      background: #fff;
+      max-width: 500px;
+      margin: auto;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
+    .welcome-box h1 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .welcome-box p {
+      margin-bottom: 20px;
+      color: #666;
+    }
+    .welcome-box a {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      background: #007bff;
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .welcome-box a:hover {
+      background: #0056b3;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Welcome to the Trust Fund Management System</h1>
-    <p><a href="login.html">Login</a> or <a href="register.html">Register</a></p>
+  <div class="welcome-box">
+    <h1>Welcome to TrustFund</h1>
+    <p>Securely create, manage, and monitor your trust funds with ease.</p>
+    <a href="login.html">Login</a>
+    <a href="register.html">Register</a>
   </div>
 </body>
 </html>
