@@ -1,1 +1,135 @@
-<!-- profile.html placeholder -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Your Profile | TrustFund</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaGoIoHQdIFtz7B3c0SAHPoKDtJhgpUOE",
+      authDomain: "trustfundsystem.firebaseapp.com",
+      databaseURL: "https://trustfundsystem-default-rtdb.firebaseio.com",
+      projectId: "trustfundsystem",
+      storageBucket: "trustfundsystem.appspot.com",
+      messagingSenderId: "365465396892",
+      appId: "1:365465396892:web:6b40840cdf0b5d5062ef59",
+      measurementId: "G-VYLYV3SW7M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const message = document.getElementById('message');
+      const form = document.getElementById('profileForm');
+      let currentUser;
+
+      onAuthStateChanged(auth, async user => {
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+        currentUser = user;
+        const docRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          form.name.value = data.name || '';
+          form.dob.value = data.dob || '';
+          form.siblings.value = data.siblings || '';
+          form.workStatus.value = data.workStatus || '';
+          form.income.value = data.income || '';
+          form.email.value = data.email || '';
+        }
+      });
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        message.textContent = '';
+
+        const name = form.name.value;
+        const dob = form.dob.value;
+        const siblings = form.siblings.value;
+        const workStatus = form.workStatus.value;
+        const income = form.income.value;
+        const email = form.email.value;
+        const newPassword = form.newPassword.value;
+        const currentPassword = form.currentPassword.value;
+
+        try {
+          // Update Firestore user data
+          await updateDoc(doc(db, 'users', currentUser.uid), {
+            name,
+            dob,
+            siblings,
+            workStatus,
+            income,
+            email
+          });
+
+          // Email update in Firebase Auth not included here (advanced)
+
+          if (newPassword) {
+            if (!currentPassword) {
+              message.textContent = 'Please enter current password to change password.';
+              message.className = 'error';
+              return;
+            }
+            const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+            await reauthenticateWithCredential(currentUser, credential);
+            await updatePassword(currentUser, newPassword);
+          }
+
+          message.textContent = 'Profile updated successfully.';
+          message.className = 'success';
+          form.newPassword.value = '';
+          form.currentPassword.value = '';
+        } catch (error) {
+          message.textContent = error.message;
+          message.className = 'error';
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h2>Your Profile</h2>
+    <form id="profileForm">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" required />
+
+      <label for="dob">Date of Birth</label>
+      <input type="date" id="dob" required />
+
+      <label for="siblings">Number of Siblings</label>
+      <input type="number" id="siblings" required />
+
+      <label for="workStatus">Work Status</label>
+      <input type="text" id="workStatus" required />
+
+      <label for="income">Annual Income</label>
+      <input type="number" id="income" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" readonly />
+
+      <label for="currentPassword">Current Password (for password change)</label>
+      <input type="password" id="currentPassword" />
+
+      <label for="newPassword">New Password</label>
+      <input type="password" id="newPassword" />
+
+      <button type="submit">Update Profile</button>
+    </form>
+    <p id="message"></p>
+    <p><a href="dashboard.html">Back to Dashboard</a></p>
+  </div>
+</body>
+</html>
