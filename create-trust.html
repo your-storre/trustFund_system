@@ -1,1 +1,89 @@
-<!-- create-trust.html placeholder -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create Trust | TrustFund</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaGoIoHQdIFtz7B3c0SAHPoKDtJhgpUOE",
+      authDomain: "trustfundsystem.firebaseapp.com",
+      databaseURL: "https://trustfundsystem-default-rtdb.firebaseio.com",
+      projectId: "trustfundsystem",
+      storageBucket: "trustfundsystem.appspot.com",
+      messagingSenderId: "365465396892",
+      appId: "1:365465396892:web:6b40840cdf0b5d5062ef59",
+      measurementId: "G-VYLYV3SW7M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('createTrustForm');
+      const message = document.getElementById('message');
+
+      onAuthStateChanged(auth, user => {
+        if (!user) {
+          window.location.href = 'login.html';
+        }
+      });
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        message.textContent = '';
+
+        const name = form.name.value;
+        const initialAmount = parseFloat(form.initialAmount.value);
+
+        if (!name || isNaN(initialAmount) || initialAmount <= 0) {
+          message.textContent = 'Please enter valid trust name and initial amount.';
+          message.className = 'error';
+          return;
+        }
+
+        try {
+          const user = auth.currentUser;
+          await addDoc(collection(db, 'trusts'), {
+            name,
+            balance: initialAmount,
+            creatorUid: user.uid,
+            isActive: true,
+            beneficiaries: [],
+            transactionHistory: [],
+            createdAt: new Date()
+          });
+          message.textContent = 'Trust created successfully!';
+          message.className = 'success';
+          form.reset();
+        } catch (error) {
+          message.textContent = error.message;
+          message.className = 'error';
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h2>Create Trust</h2>
+    <form id="createTrustForm">
+      <label for="name">Trust Name</label>
+      <input type="text" id="name" required />
+
+      <label for="initialAmount">Initial Amount ($)</label>
+      <input type="number" id="initialAmount" min="0" step="0.01" required />
+
+      <button type="submit">Create Trust</button>
+    </form>
+    <p id="message"></p>
+    <p><a href="dashboard.html">Back to Dashboard</a></p>
+  </div>
+</body>
+</html>
